@@ -45,10 +45,20 @@
             
       ?$valid_or_reset  
          @2
-            $out[31:0] = $op[0] ? $sum[31:0] 
-                    : ($op[1] ? $diff[31:0] 
-                    : ($op[2] ? $mul[31:0]
-                    : $div[31:0]) );
+            $recallop = ($op == 3'b100);
+            $memop = ($op == 3'b101);
+            
+            $out[31:0] = $op[2:0] == 3'b000 ? $sum[31:0] 
+                    : ($op[2:0] == 3'b001 ? $diff[31:0] 
+                    : ($op[2:0] == 3'b010 ? $mul[31:0]
+                    : ($op[2:0] == 3'b011 ? $div[31:0]
+                    : ($recallop ? $mem[31:0] : $RETAIN) ) ) );
+                    
+                    
+            $mem[31:0] = $memop ? >>2$out : $RETAIN;
+            
+            
+
 
 
    /*
