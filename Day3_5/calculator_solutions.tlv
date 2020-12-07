@@ -13,10 +13,12 @@
 \TLV
    $reset = *reset;
 
+   // RV_D3SK1_L3_Lab
    //$out[5:0] = $in1[3:0] + $in2[3:0] + 10;
    //$out1 = $sel ? $in3 : $in2;
 
 
+   // RV_D3SK2_L3_Lab
    |calc
       // Calculator
       @0
@@ -32,7 +34,9 @@
                  : ($op[2] ? $mul[31:0]
                  : $div[31:0]) ) );
    
+   // RV_D3SK1_L3_Lab
    
+   /*
    |pythagoras theorem
       @0
          $a_sq = $a * $a;
@@ -41,7 +45,7 @@
          $sum_a_b = $a_sq + $b_sq;
       @2   
          $c = sqrt($sum_a_b);
-   
+   */
    /*
    |Fibonacci
       @0
