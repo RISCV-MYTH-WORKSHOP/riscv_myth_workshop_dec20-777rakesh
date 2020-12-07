@@ -37,21 +37,20 @@
    // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
    m4_define_hier(['M4_IMEM'], M4_NUM_INSTRS)
 
+   // RV_D4SK2_L1
+   m4_define(['M4_IMEM_INDEX_CNT'], 32)
    |cpu
       @0
          $reset = *reset;
-
-
-
-      // YOUR CODE HERE
-      // ...
-
-      // Note: Because of the magic we are using for visualisation, if visualisation is enabled below,
-      //       be sure to avoid having unassigned signals (which you might be using for random inputs)
-      //       other than those specifically expected in the labs. You'll get strange errors for these.
-
-         // RV_D4SK2_L1
-         $pc[31:0] = >>1$reset ? 0 : $pc[31:0] + 4;
+         
+         $pc[31:0] = >>1$reset ? 0 : (>>1$pc[31:0] + 4);
+         
+      @1
+         $imem_rd_en = !$reset;
+         
+         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[31:0];
+         
+         $instr[31:0] = $imem_rd_data[31:0];
    
    // Assert these to end simulation (before Makerchip cycle limit).
    *passed = *cyc_cnt > 40;
@@ -64,6 +63,7 @@
    //  o CPU visualization
    |cpu
       //m4+imem(@1)    // Args: (read stage)
+         
       //m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
