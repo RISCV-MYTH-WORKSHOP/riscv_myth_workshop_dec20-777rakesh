@@ -7,6 +7,8 @@
 
    // Default Makerchip TL-Verilog Code Template
    
+   `include "sqrt32.v"
+
    // Macro providing required top-level module definition, random
    // stimulus support, and Verilator config.
    m4_makerchip_module   // (Expanded in Nav-TLV pane.)
@@ -17,7 +19,7 @@
    //$out[5:0] = $in1[3:0] + $in2[3:0] + 10;
    //$out1 = $sel ? $in3 : $in2;
 
-
+/*
    // RV_D3SK2_L3_Lab
    |calc
       // Calculator
@@ -32,15 +34,17 @@
 
          //Free running counter
          $cnt[0:0] = $reset ? 1 : (>>1$cnt + 1);
-
-      @2
-         $valid[0:0] = $cnt[0:0]
          
-         $out[31:0] = ($reset || !$valid[0:0]) ? 0 : ($op[0] ? $sum[31:0] 
+         $valid[0:0] = $cnt[0:0];
+         
+      ?$valid
+      @2
+         $out[31:0] = ($reset) ? 0 : ($op[0] ? $sum[31:0] 
                  : ($op[1] ? $diff[31:0] 
                  : ($op[2] ? $mul[31:0]
                  : $div[31:0]) ) );
-   
+   */
+
    /*
    // RV_D3SK3_L3_Lab Error conditions
    |comp
@@ -60,16 +64,23 @@
          $err3[8:0] = $div_by_zero[8:0] || $err2[8:0]
    */   
    
-   /*
+   // RV_D3SK4_L3_Lab
    |pythagoras theorem
-      @0
-         $a_sq = $a * $a;
-         $b_sq = $b * $b;
-      @1   
-         $sum_a_b = $a_sq + $b_sq;
-      @2   
-         $c = sqrt($sum_a_b);
-   */
+      @1
+         $reset = *reset;
+      
+      ?$valid
+         @1
+            $a_sq[31:0] = $a[3:0] * $a[3:0];
+            $b_sq[31:0] = $b[3:0] * $b[3:0];
+         @2   
+            $sum_a_b[31:0] = $a_sq[31:0] + $b_sq[31:0];
+         @3   
+            $c[31:0] = sqrt($sum_a_b[31:0]);
+      @4
+         $tot_distance[63:0] = 
+               $reset ? 0 : (
+                  $valid ? (>>1$tot_distance + $c) : $RETAIN  );
    /*
    |Fibonacci
       @0
