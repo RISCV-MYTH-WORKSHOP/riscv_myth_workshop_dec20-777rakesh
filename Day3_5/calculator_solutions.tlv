@@ -13,37 +13,43 @@
    // stimulus support, and Verilator config.
    m4_makerchip_module   // (Expanded in Nav-TLV pane.)
 \TLV
-   $reset = *reset;
+   
 
    // RV_D3SK1_L3_Lab
    //$out[5:0] = $in1[3:0] + $in2[3:0] + 10;
    //$out1 = $sel ? $in3 : $in2;
 
-/*
+
    // RV_D3SK2_L3_Lab
+   // RV_D3SK4_L3_Lab
+
    |calc
       // Calculator
       @1
-         $val1[31:0] = >>2$out;
-         $val2[31:0] = $rand2[3:0];
+         $reset = *reset;
          
-         $sum[31:0] = $val1[31:0] + $val2[31:0];
-         $diff[31:0] = $val1[31:0] - $val2[31:0];
-         $mul[31:0] = $val1[31:0] * $val2[31:0];
-         $div[31:0] = $val1[31:0] / $val2[31:0];
-
          //Free running counter
-         $cnt[0:0] = $reset ? 1 : (>>1$cnt + 1);
-         
-         $valid[0:0] = $cnt[0:0];
-         
+         $valid[0:0] = $reset ? 1 : (>>1$valid + 1);
+
       ?$valid
-      @2
-         $out[31:0] = ($reset) ? 0 : ($op[0] ? $sum[31:0] 
-                 : ($op[1] ? $diff[31:0] 
-                 : ($op[2] ? $mul[31:0]
-                 : $div[31:0]) ) );
-   */
+         @1
+            $val1[31:0] = >>2$out;
+            $val2[31:0] = $rand2[3:0];
+
+            $sum[31:0] = $val1[31:0] + $val2[31:0];
+            $diff[31:0] = $val1[31:0] - $val2[31:0];
+            $mul[31:0] = $val1[31:0] * $val2[31:0];
+            $div[31:0] = $val1[31:0] / $val2[31:0];
+            
+            $valid_or_reset = $valid || $reset;
+            
+      ?$valid_or_reset  
+         @2
+            $out[31:0] = $op[0] ? $sum[31:0] 
+                    : ($op[1] ? $diff[31:0] 
+                    : ($op[2] ? $mul[31:0]
+                    : $div[31:0]) );
+
 
    /*
    // RV_D3SK3_L3_Lab Error conditions
@@ -64,6 +70,7 @@
          $err3[8:0] = $div_by_zero[8:0] || $err2[8:0]
    */   
    
+   /*
    // RV_D3SK4_L3_Lab
    |pythagoras theorem
       @1
@@ -81,6 +88,8 @@
          $tot_distance[63:0] = 
                $reset ? 0 : (
                   $valid ? (>>1$tot_distance + $c) : $RETAIN  );
+   */
+   
    /*
    |Fibonacci
       @0
