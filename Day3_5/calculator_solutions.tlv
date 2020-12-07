@@ -34,7 +34,23 @@
                  : ($op[2] ? $mul[31:0]
                  : $div[31:0]) ) );
    
-   // RV_D3SK1_L3_Lab
+   // RV_D3SK3_L3_Lab Error conditions
+   |comp
+      @1
+         $err1[8:0] = $bad_input[8:0] + $illegal_exp[8:0]
+         
+      @2
+         
+      @3
+         $err2[8:0] = $over_flow[8:0] || $err1[8:0]
+      
+      @4
+         
+      @5
+         
+      @6
+         $err3[8:0] = $div_by_zero[8:0] || $err2[8:0]
+      
    
    /*
    |pythagoras theorem
