@@ -54,7 +54,6 @@
          $instr[31:0] = $imem_rd_data[31:0];
          
          // RV_D4SK2_L3
-      @2   
          //Decoder
          //Instruction type decode
          
@@ -129,6 +128,17 @@
          
          $is_add = $decode_bits ==? 11'b0_000_0110011;
          
+         // RV_D4SK3_L1 Register file
+         $rf_wr_en = 1'b0;
+         $rf_wr_index[4:0] = 5'b0;
+         
+         $rf_rd_en1 = $rs1_valid;
+         $rf_rd_index1[4:0] = $rs1[4:0];
+         
+         $rf_rd_en2 = $rs2_valid;
+         $rf_rd_index2[4:0] = $rs2[4:0];
+
+
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
    
    // Assert these to end simulation (before Makerchip cycle limit).
@@ -143,7 +153,7 @@
    |cpu
       m4+imem(@1)    // Args: (read stage)
          
-      //m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
+      m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
    //m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
