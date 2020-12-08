@@ -134,6 +134,41 @@
          
          $is_add = $decode_bits ==? 11'b0_000_0110011;
          
+         // RV_D5SK2_L3 More instructions decoding
+         $is_lui = $decode_bits ==? 11'bx_xxx_0110111;
+         $is_auipc = $decode_bits ==? 11'bx_xxx_0010111;
+         $is_jal = $decode_bits ==? 11'bx_xxx_1101111;
+         $is_jalr = $decode_bits ==? 11'bx_000_1100111;
+         
+         $is_ld = $decode_bits ==? 11'bx_xxx_0000011;
+         
+         $is_sb = $decode_bits ==? 11'bx_000_0100011;
+         $is_sh = $decode_bits ==? 11'bx_001_0100011;
+         $is_sw = $decode_bits ==? 11'bx_010_0100011;
+         
+         $is_slti = $decode_bits ==? 11'bx_010_0010011;
+         $is_sltiu = $decode_bits ==? 11'bx_011_0010011;
+         
+         $is_xori = $decode_bits ==? 11'bx_100_0010011;
+         $is_ori = $decode_bits ==? 11'bx_110_0010011;
+         $is_andi = $decode_bits ==? 11'bx_111_0010011;
+         
+         $is_slli = $decode_bits ==? 11'b0_001_0010011;
+         $is_srli = $decode_bits ==? 11'b0_101_0010011;
+         $is_srai = $decode_bits ==? 11'b1_001_0010011;
+         
+         $is_sub = $decode_bits ==? 11'b1_000_0110011;
+         
+         $is_sll = $decode_bits ==? 11'b0_001_0110011;
+         $is_slt = $decode_bits ==? 11'b0_010_0110011;
+         $is_sltu = $decode_bits ==? 11'b0_011_0110011;
+         $is_xor = $decode_bits ==? 11'b0_100_0110011;
+         $is_srl = $decode_bits ==? 11'b0_101_0110011;
+         $is_sra = $decode_bits ==? 11'b1_101_0110011;
+         
+         $is_or = $decode_bits ==? 11'b0_110_0110011;
+         $is_and = $decode_bits ==? 11'b0_111_0110011;
+         
       @2   
          // RV_D4SK3_L1 Register file
          $rf_wr_en = $valid && $rd_valid && $rd != 5'b0; // If destinatoin register is "Zero" then do not enable write register
