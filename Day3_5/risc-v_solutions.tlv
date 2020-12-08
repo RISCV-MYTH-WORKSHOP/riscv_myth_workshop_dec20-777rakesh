@@ -32,6 +32,9 @@
    m4_asm(ADDI, r13, r13, 1)            // Increment intermediate register by 1
    m4_asm(BLT, r13, r12, 1111111111000) // If a3 is less than a2, branch to label named <loop>
    m4_asm(ADD, r10, r14, r0)            // Store final result to register a0 so that it can be read by main program
+   //Load/Store
+   m4_asm(SW, r0, r10, 100)
+   m4_asm(LW, r15, r0, 100)
    
    // Optional:
    // m4_asm(JAL, r7, 00000000000000000000) // Done. Jump to itself (infinite loop). (Up to 20-bit signed immediate plus implicit 0 bit (unlike JALR) provides byte address; last immediate bit should also be 0)
@@ -55,7 +58,7 @@
          
          $imem_rd_en = !$reset;
          
-         $imem_rd_addr[3-1:0] = $pc[3+1:2];
+         $imem_rd_addr[4-1:0] = $pc[4+1:2];
          
          $instr[31:0] = $imem_rd_data[31:0];
          
@@ -168,12 +171,8 @@
          
          $is_or = $decode_bits ==? 11'b0_110_0110011;
          $is_and = $decode_bits ==? 11'b0_111_0110011;
-         
-         
+                 
          // RV_D4SK3_L1 Register file
-         
-         
-         
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_index1[4:0] = $rs1[4:0];
          
@@ -225,7 +224,7 @@
                          $is_slti ? ( ($src1_value[31] == $imm[31]) ? $sltiu_result : {31'b0,$src1_value[31]} ) :
                          
                          $is_ld ? ($src1_value[31:0] + $imm[31:0]) :
-                         $is_s_instr ? ($src1_value[31:0] + $imm[31:0]) :
+                         $is_s_type ? ($src1_value[31:0] + $imm[31:0]) :
                          32'b0;
                          
          $rf_wr_data[31:0] = >>2$valid_load ? (>>2$ld_data) : $result;                
@@ -242,31 +241,28 @@
                      1'b0;
          
          $valid_taken_br = $valid && $taken_br;
-         
-         $valid_load = $valid && $is_load;
-         
-         
+         $valid_load = $valid && $is_ld;
          
          $valid = !( >>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_load || >>2$valid_load ) ;
          
-         $rf_wr_en = $rd_valid && $rd != 5'b0 && $valid; // If destinatoin register is "Zero" then do not enable write register
+         $rf_wr_en = ($rd_valid && $rd != 5'b0 && $valid) || (>>2$valid_load); // If destinatoin register is "Zero" then do not enable write register
          
       @4
                  
          $dmem_addr[3:0] = $result[5:2];
          
          // Store
-         $dmem_wr_en = $is_s_instr && $valid;
+         $dmem_wr_en = $is_s_type && $valid;
          $dmem_wr_data[31:0] = $src2_value;
          
          // Load
-         $dmem_rd_en = $is_load;
+         $dmem_rd_en = $is_ld;
       @5
          $ld_data[31:0] = $dmem_rd_data;
    
    // Assert these to end simulation (before Makerchip cycle limit).
    //*passed = *cyc_cnt > 40;
-   *passed = |cpu/xreg[10]>>5$value == (1+2+3+4+5+6+7+8+9);
+   *passed = |cpu/xreg[15]>>5$value == (1+2+3+4+5+6+7+8+9);
    *failed = 1'b0;
    
    // Macro instantiations for:
