@@ -46,6 +46,11 @@
          $pc[31:0] = >>1$reset ? 0 : 
                     >>1$taken_br ? >>1$br_target_pc: (>>1$pc + 32'd4);
          
+         // RV_D5SK1_L1
+         $start = >>1$reset && !$reset;
+         $valid = $reset ? 1'b0 : 
+                  ($start ? 1'b1 : >>3$valid);
+         
          // RV_D4SK2_L2
       @1
          $imem_rd_en = !$reset;
