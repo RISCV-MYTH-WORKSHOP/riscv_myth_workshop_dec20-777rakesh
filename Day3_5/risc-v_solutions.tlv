@@ -172,7 +172,7 @@
          
          // RV_D4SK3_L1 Register file
          
-         $rf_wr_index[4:0] = $rd; // Register destination
+         
          
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_index1[4:0] = $rs1[4:0];
@@ -224,9 +224,12 @@
                          $is_slt ? ( ($src1_value[31] == $src2_value[31]) ? $sltu_result : {31'b0,$src1_value[31]} ) :
                          $is_slti ? ( ($src1_value[31] == $imm[31]) ? $sltiu_result : {31'b0,$src1_value[31]} ) :
                          
+                         $is_ld ? ($src1_value[31:0] + $imm[31:0]) :
+                         $is_s_instr ? ($src1_value[31:0] + $imm[31:0]) :
                          32'b0;
                          
-         $rf_wr_data[31:0] = $result;                
+         $rf_wr_data[31:0] = >>2$valid_load ? (>>2$ld_data) : $result;                
+         $rf_wr_index[4:0] = >>2$valid_load ? (>>2$rd) : $rd; // Register destination
          
          //RV_D4SK3_L6
          
@@ -247,6 +250,19 @@
          $valid = !( >>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_load || >>2$valid_load ) ;
          
          $rf_wr_en = $rd_valid && $rd != 5'b0 && $valid; // If destinatoin register is "Zero" then do not enable write register
+         
+      @4
+                 
+         $dmem_addr[3:0] = $result[5:2];
+         
+         // Store
+         $dmem_wr_en = $is_s_instr && $valid;
+         $dmem_wr_data[31:0] = $src2_value;
+         
+         // Load
+         $dmem_rd_en = $is_load;
+      @5
+         $ld_data[31:0] = $dmem_rd_data;
    
    // Assert these to end simulation (before Makerchip cycle limit).
    //*passed = *cyc_cnt > 40;
@@ -262,7 +278,7 @@
       m4+imem(@1)    // Args: (read stage)
          
       m4+rf(@2, @3)  // Args: (read stage, write stage) - if equal, no register bypass is required
-      //m4+dmem(@4)    // Args: (read/write stage)
+      m4+dmem(@4)    // Args: (read/write stage)
    
    m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
