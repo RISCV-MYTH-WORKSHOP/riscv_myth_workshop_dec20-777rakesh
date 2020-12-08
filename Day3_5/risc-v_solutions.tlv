@@ -43,7 +43,8 @@
       @0
          $reset = *reset;
          
-         $pc[31:0] = >>1$reset ? 0 : (>>1$pc[31:0] + 4);
+         $pc[31:0] = >>1$reset ? 0 : 
+                    >>1$taken_br ? >>1$br_target_pc[31:0]: (>>1$pc[31:0] + 32'd4);
          
          // RV_D4SK2_L2
       @1
@@ -150,13 +151,16 @@
          //RV_D4SK3_L6
          
          $taken_br = $is_beq ? ($src1_value == $src2_value) : 
-                     $is_bnq ? ($src1_value != $src2_value) : 
+                     $is_bne ? ($src1_value != $src2_value) : 
                      $is_blt ? (($src1_value < $src2_value) ^ ($src1_value[31] != $src2_value[31])) : 
                      $is_bge ? (($src1_value >= $src2_value) ^ ($src1_value[31] != $src2_value[31])) : 
                      $is_bltu ? ($src1_value < $src2_value) : 
                      $is_bgeu ? ($src1_value >= $src2_value) : 
                      1'b0;
          
+         $br_target_pc[31:0] = $pc[31:0] + $imm[31:0];
+         
+                 
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
    
    // Assert these to end simulation (before Makerchip cycle limit).
