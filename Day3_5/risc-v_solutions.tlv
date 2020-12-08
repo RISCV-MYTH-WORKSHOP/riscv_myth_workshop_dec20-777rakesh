@@ -45,6 +45,7 @@
          
          $pc[31:0] = >>1$reset ? 0 : (>>1$pc[31:0] + 4);
          
+         // RV_D4SK2_L2
       @1
          $imem_rd_en = !$reset;
          
@@ -52,30 +53,83 @@
          
          $instr[31:0] = $imem_rd_data[31:0];
          
+         // RV_D4SK2_L3
       @2   
          //Decoder
+         //Instruction type decode
          
          $is_i_instr = $instr[6:2] ==? 5'b0000x || 
                        $instr[6:2] ==? 5'b001x0 || 
                        $instr[6:2] == 5'b11001;
-                      
-         
-         $is_r_instr = $instr[6:2] ==? 5'b011x0 ||
-                       $instr[6:2] ==? 5'b01011 ||
-                       $instr[6:2] ==? 5'b10100;
          
          $is_s_instr = $instr[6:2] ==? 5'b0100x;
          
          $is_b_instr = $instr[6:2] ==? 5'b11000;
          
-         $is_j_instr = $instr[6:2] ==? 5'b11011;
-         
          $is_u_instr = $instr[6:5] ==? 5'b0x101;
          
+         $is_j_instr = $instr[6:2] ==? 5'b11011;
          
+         $is_r_instr = $instr[6:2] ==? 5'b011x0 ||
+                       $instr[6:2] ==? 5'b01011 ||
+                       $instr[6:2] ==? 5'b10100;
          
+         // RV_D4SK2_L4
+         //Immediete decode
          
+         $imm[31:0] = $is_i_instr ? { {21{instr[31]}} , {instr[30:20]} } :
+                      $is_s_instr ? { {21{instr[31]}} , {instr[30:25]} , {instr[11:7]} } :
+                      $is_b_instr ? { {20{instr[31]}} , {instr[7]} , {instr[30:25]} , {instr[11:8]} , 1'b0 } :
+                      $is_u_instr ? { {31:12} , 12'b0 } :
+                      $is_j_instr ? { {12{instr[31]}} , {instr{19:12}} , {instr[20]} , {instr[30:21]} , 1'b0 } :
+                      32'b0;
          
+         // RV_D4SK2_L5
+         
+         $funct7_valid = $is_r_type;
+         ?$funct7_valid
+            $funct7[6:0] = $instr[31:25];
+         
+         $rs2_valid = $is_r_type || $is_s_type || $is_b_type;
+         ?$rs2_valid
+            $rs2[4:0] = $instr[24:20];
+         
+         $rs1_valid = $is_r_type || $is_i_type || $is_s_type || $is_b_type;
+         ?$rs1_valid
+            $rs1[4:0] = $instr[19:15];
+         
+         $funct3_valid = $is_r_type || $is_i_type || $is_s_type || $is_b_type;
+         ?$funct3_valid
+            $funct3[2:0] = $instr[14:12];
+         
+         $rd_valid = $is_r_type || $is_i_type || $is_u_type || $is_j_type;
+         ?$rd_valid
+            $rd[4:0] = $instr[11:7];
+         
+         $opcode[6:0] = $instr[6:0];
+         
+         // RV_D4SK2_L6
+         // Decoding instructions
+         
+         $decode_bits[10:0] = { $funct7[5], $funct3, $opcode};
+         
+         $is_beq = $decode_bits ==? 11'bx_000_1100011;
+         
+         $is_bne = $decode_bits ==? 11'bx_001_1100011;
+         
+         $is_blt = $decode_bits ==? 11'bx_100_1100011;
+         
+         $is_bge = $decode_bits ==? 11'bx_101_1100011;
+         
+         $is_bltu = $decode_bits ==? 11'bx_110_1100011;
+         
+         $is_bgeu = $decode_bits ==? 11'bx_111_1100011;
+         
+         $is_addi = $decode_bits ==? 11'bx_000_0010011;
+         
+         $is_add = $decode_bits ==? 11'b0_000_0110011;
+         
+         `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
    
    // Assert these to end simulation (before Makerchip cycle limit).
    *passed = *cyc_cnt > 40;
