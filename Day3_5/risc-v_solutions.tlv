@@ -44,13 +44,13 @@
          $reset = *reset;
          
          $pc[31:0] = >>1$reset ? 0 : 
-                    >>1$taken_br ? >>1$br_target_pc[31:0]: (>>1$pc[31:0] + 32'd4);
+                    >>1$taken_br ? >>1$br_target_pc: (>>1$pc + 32'd4);
          
          // RV_D4SK2_L2
       @1
          $imem_rd_en = !$reset;
          
-         $imem_rd_addr[M4_IMEM_INDEX_CNT-1:0] = $pc[31:0];
+         $imem_rd_addr[3-1:0] = $pc[3+1:2];
          
          $instr[31:0] = $imem_rd_data[31:0];
          
@@ -130,6 +130,8 @@
          $is_add = $decode_bits ==? 11'b0_000_0110011;
          
          // RV_D4SK3_L1 Register file
+         $rf_wr_en = $rd_valid && $rd != 5'b0; // If destinatoin register is "Zero" then do not enable write register
+         $rf_wr_index[4:0] = $rd; // Register destination
          
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_index1[4:0] = $rs1[4:0];
@@ -142,11 +144,10 @@
          
          //ALU
          $result[31:0] = $is_addi ? ($src1_value[31:0] + $imm[31:0]) :
-                         $is_add ? ($src1_value[31:0] + $imm[31:0]) :
+                         $is_add ? ($src1_value[31:0] + $src2_value[31:0]) :
                          32'b0;
                          
-         $rf_wr_en = ($rd == 0) ? 0 : $rd_valid; // If destinatoin register is "Zero" then do not enable write register
-         $rf_wr_index[4:0] = $rd; // Register destination
+         $rf_wr_data[31:0] = $result;                
          
          //RV_D4SK3_L6
          
@@ -164,7 +165,8 @@
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
    
    // Assert these to end simulation (before Makerchip cycle limit).
-   *passed = *cyc_cnt > 40;
+   //*passed = *cyc_cnt > 40;
+   *passed = |cpu/xreg[10]>>5$value == (1+2+3+4+5+6+7+8+9);
    *failed = 1'b0;
    
    // Macro instantiations for:
@@ -178,7 +180,7 @@
       m4+rf(@1, @1)  // Args: (read stage, write stage) - if equal, no register bypass is required
       //m4+dmem(@4)    // Args: (read/write stage)
    
-   //m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
+   m4+cpu_viz(@4)    // For visualisation, argument should be at least equal to the last stage of CPU logic
                        // @4 would work for all labs
 \SV
    endmodule
