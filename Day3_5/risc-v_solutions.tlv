@@ -44,15 +44,15 @@
          $reset = *reset;
          
          $pc[31:0] = >>1$reset ? 0 : 
-                    >>3$valid_taken_br ? >>3$br_target_pc: (>>3$pc + 32'd4);
+                    >>3$valid_taken_br ? >>3$br_target_pc: 
+                    (>>3$valid_load ? (>>3$inc_pc) : >>1$inc_pc);
          
-         // RV_D5SK1_L1
-         $start = >>1$reset && !$reset;
-         $valid = $reset ? 1'b0 : 
-                  ($start ? 1'b1 : >>3$valid);
+                 
          
          // RV_D4SK2_L2
       @1
+         $inc_pc[31:0] = $pc + 32'd4;
+         
          $imem_rd_en = !$reset;
          
          $imem_rd_addr[3-1:0] = $pc[3+1:2];
@@ -115,7 +115,7 @@
          
          // RV_D4SK2_L6
          // Decoding instructions
-         
+      @2   
          $decode_bits[10:0] = { $funct7[5], $funct3, $opcode};
          
          $is_beq = $decode_bits ==? 11'bx_000_1100011;
@@ -169,9 +169,9 @@
          $is_or = $decode_bits ==? 11'b0_110_0110011;
          $is_and = $decode_bits ==? 11'b0_111_0110011;
          
-      @2   
+         
          // RV_D4SK3_L1 Register file
-         $rf_wr_en = $valid && $rd_valid && $rd != 5'b0; // If destinatoin register is "Zero" then do not enable write register
+         
          $rf_wr_index[4:0] = $rd; // Register destination
          
          $rf_rd_en1 = $rs1_valid;
@@ -184,6 +184,9 @@
                              $rf_rd_data1[31:0];
          $src2_value[31:0] = (>>1$rf_wr_index == $rf_rd_index2 && >>1$rf_wr_en) ? >>1$result :
                              $rf_rd_data2[31:0];
+         
+         
+         $br_target_pc[31:0] = $pc[31:0] + $imm[31:0];
          
       @3   
          //ALU
@@ -237,10 +240,13 @@
          
          $valid_taken_br = $valid && $taken_br;
          
-         $br_target_pc[31:0] = $pc[31:0] + $imm[31:0];
+         $valid_load = $valid && $is_load;
          
-                 
-         `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
+         
+         
+         $valid = !( >>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_load || >>2$valid_load ) ;
+         
+         $rf_wr_en = $rd_valid && $rd != 5'b0 && $valid; // If destinatoin register is "Zero" then do not enable write register
    
    // Assert these to end simulation (before Makerchip cycle limit).
    //*passed = *cyc_cnt > 40;
