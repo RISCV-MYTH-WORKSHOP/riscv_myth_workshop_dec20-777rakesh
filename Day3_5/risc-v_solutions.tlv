@@ -129,16 +129,34 @@
          $is_add = $decode_bits ==? 11'b0_000_0110011;
          
          // RV_D4SK3_L1 Register file
-         $rf_wr_en = 1'b0;
-         $rf_wr_index[4:0] = 5'b0;
          
          $rf_rd_en1 = $rs1_valid;
          $rf_rd_index1[4:0] = $rs1[4:0];
          
          $rf_rd_en2 = $rs2_valid;
          $rf_rd_index2[4:0] = $rs2[4:0];
-
-
+         
+         $src1_value[31:0] = $rf_rd_data1[31:0];
+         $src2_value[31:0] = $rf_rd_data2[31:0];
+         
+         //ALU
+         $result[31:0] = $is_addi ? ($src1_value[31:0] + $imm[31:0]) :
+                         $is_add ? ($src1_value[31:0] + $imm[31:0]) :
+                         32'b0;
+                         
+         $rf_wr_en = ($rd == 0) ? 0 : $rd_valid; // If destinatoin register is "Zero" then do not enable write register
+         $rf_wr_index[4:0] = $rd; // Register destination
+         
+         //RV_D4SK3_L6
+         
+         $taken_br = $is_beq ? ($src1_value == $src2_value) : 
+                     $is_bnq ? ($src1_value != $src2_value) : 
+                     $is_blt ? (($src1_value < $src2_value) ^ ($src1_value[31] != $src2_value[31])) : 
+                     $is_bge ? (($src1_value >= $src2_value) ^ ($src1_value[31] != $src2_value[31])) : 
+                     $is_bltu ? ($src1_value < $src2_value) : 
+                     $is_bgeu ? ($src1_value >= $src2_value) : 
+                     1'b0;
+         
          `BOGUS_USE($is_beq $is_bne $is_blt $is_bge $is_bltu $is_bgeu $is_addi $is_add)
    
    // Assert these to end simulation (before Makerchip cycle limit).
