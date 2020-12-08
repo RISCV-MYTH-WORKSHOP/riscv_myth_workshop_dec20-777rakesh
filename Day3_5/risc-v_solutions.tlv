@@ -48,7 +48,10 @@
          
          $pc[31:0] = >>1$reset ? 0 : 
                     >>3$valid_taken_br ? >>3$br_target_pc: 
-                    (>>3$valid_load ? (>>3$inc_pc) : >>1$inc_pc);
+                    (>>3$valid_jump && >>3$is_jal) ? >>3$br_target_pc: 
+                    (>>3$valid_jump && >>3$is_jalr) ? >>3$jalr_target_pc: 
+                    (>>3$valid_load ? (>>3$inc_pc) : 
+                    >>1$inc_pc);
          
                  
          
@@ -143,6 +146,8 @@
          $is_jal = $decode_bits ==? 11'bx_xxx_1101111;
          $is_jalr = $decode_bits ==? 11'bx_000_1100111;
          
+         $is_jump = $is_jal | $is_jalr;
+         
          $is_ld = $decode_bits ==? 11'bx_xxx_0000011;
          
          $is_sb = $decode_bits ==? 11'bx_000_0100011;
@@ -186,6 +191,7 @@
          
          
          $br_target_pc[31:0] = $pc[31:0] + $imm[31:0];
+         $jalr_target_pc[31:0] = $src1_value[31:0] + $imm[31:0];
          
       @3   
          //ALU
@@ -243,7 +249,10 @@
          $valid_taken_br = $valid && $taken_br;
          $valid_load = $valid && $is_ld;
          
-         $valid = !( >>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_load || >>2$valid_load ) ;
+         $valid_jump = $valid && $is_jump;
+         
+         $valid = !( >>1$valid_taken_br || >>2$valid_taken_br || >>1$valid_load || >>2$valid_load || >>1$valid_jump 
+                   || >>2$valid_jump) ;
          
          $rf_wr_en = ($rd_valid && $rd != 5'b0 && $valid) || (>>2$valid_load); // If destinatoin register is "Zero" then do not enable write register
          
